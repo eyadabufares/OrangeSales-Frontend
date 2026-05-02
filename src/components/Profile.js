@@ -5,16 +5,13 @@ const Profile = ({ user, setUser }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(false);
     
-    const [formData, setFormData] = useState(() => {
-        const savedUser = JSON.parse(localStorage.getItem('userData')) || {};
-        return {
-            fullName: user?.fullName || savedUser.fullName || '',
-            email: user?.email || savedUser.email || '',
-            profileImageUrl: user?.profileImageUrl || savedUser.profileImageUrl || '',
-            currentPassword: '',
-            newPassword: '',
-            confirmNewPassword: ''
-        };
+    const [formData, setFormData] = useState({
+        fullName: user?.fullName || '',
+        email: user?.email || '',
+        profileImageUrl: user?.profileImageUrl || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: ''
     });
 
     useEffect(() => {
@@ -48,8 +45,9 @@ const Profile = ({ user, setUser }) => {
                 body: data
             });
             const fileData = await resp.json();
-            setFormData({ ...formData, profileImageUrl: fileData.secure_url });
-            alert("Image uploaded successfully!");
+            
+            setFormData(prev => ({ ...prev, profileImageUrl: fileData.secure_url }));
+            alert("Image uploaded successfully! Click 'Save Changes' to finalize.");
         } catch (err) {
             alert("Upload failed");
         } finally {
@@ -59,18 +57,21 @@ const Profile = ({ user, setUser }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
         if (formData.newPassword && formData.newPassword !== formData.confirmNewPassword) {
             alert("New passwords do not match!");
             return;
         }
 
         setLoading(true);
-        const currentUserId = user?.id || localStorage.getItem('id') || localStorage.getItem('userId');
+        const currentUserId = user?.id || user?.userId || localStorage.getItem('userId');
         
         try {
             const response = await api.put(`/User/update-profile/${currentUserId}`, formData);
+            
             if (response.data) {
                 alert("Profile updated successfully!");
+                
                 const updatedUser = {
                     ...user,
                     id: currentUserId,
@@ -78,7 +79,16 @@ const Profile = ({ user, setUser }) => {
                     email: formData.email,
                     profileImageUrl: formData.profileImageUrl
                 };
-                setUser(updatedUser);
+                
+                setUser(updatedUser); 
+
+                setFormData(prev => ({
+                    ...prev,
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmNewPassword: ''
+                }));
+                
                 setIsEditMode(false);
             }
         } catch (error) {
@@ -153,18 +163,18 @@ const Profile = ({ user, setUser }) => {
                                                 <h6 className="fw-bold mb-3" style={{ color: '#ff6600' }}>Security Settings</h6>
                                                 <div className="mb-3">
                                                     <label className="small fw-bold">Current Password</label>
-                                                    <input type="password" name="currentPassword" placeholder="كلمة السر الحالية"
+                                                    <input type="password" name="currentPassword" placeholder="كلمة السر الحالية لتأكيد التعديلات"
                                                         className="form-control" value={formData.currentPassword} onChange={handleChange} required />
                                                 </div>
                                                 <div className="row">
                                                     <div className="col-md-6 mb-3">
-                                                        <label className="small fw-bold">New Password</label>
-                                                        <input type="password" name="newPassword" placeholder="الجديدة"
+                                                        <label className="small fw-bold">New Password (Optional)</label>
+                                                        <input type="password" name="newPassword" placeholder="اتركه فارغاً لعدم التغيير"
                                                             className="form-control" value={formData.newPassword} onChange={handleChange} />
                                                     </div>
                                                     <div className="col-md-6 mb-3">
                                                         <label className="small fw-bold">Confirm New Password</label>
-                                                        <input type="password" name="confirmNewPassword" placeholder="تأكيد الجديدة"
+                                                        <input type="password" name="confirmNewPassword" placeholder="تأكيد كلمة السر الجديدة"
                                                             className="form-control" value={formData.confirmNewPassword} onChange={handleChange} />
                                                     </div>
                                                 </div>
@@ -178,7 +188,6 @@ const Profile = ({ user, setUser }) => {
                                                         backgroundColor: '#1a1a1a', 
                                                         color: '#ff6600', 
                                                         border: '2px solid #ff6600',
-                                                        transition: '0.3s',
                                                         borderRadius: '8px'
                                                     }}
                                                     onMouseOver={(e) => { e.target.style.backgroundColor = '#ff6600'; e.target.style.color = '#ffffff'; }}
