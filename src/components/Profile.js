@@ -5,23 +5,25 @@ const Profile = ({ user, setUser }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [loading, setLoading] = useState(false);
     
-    const [formData, setFormData] = useState({
-        fullName: user?.fullName || '',
-        email: user?.email || '',
-        profileImageUrl: user?.profileImageUrl || '',
-        currentPassword: '',
-        newPassword: '',
-        confirmNewPassword: ''
+    const [formData, setFormData] = useState(() => {
+        const savedUser = JSON.parse(localStorage.getItem('userData')) || {};
+        return {
+            fullName: user?.fullName || savedUser.fullName || '',
+            email: user?.email || savedUser.email || '',
+            profileImageUrl: user?.profileImageUrl || savedUser.profileImageUrl || '',
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: ''
+        };
     });
 
     useEffect(() => {
-        const storedUser = user || JSON.parse(localStorage.getItem('userData'));
-        if (storedUser) {
+        if (user) {
             setFormData(prev => ({
                 ...prev,
-                fullName: storedUser.fullName || '',
-                email: storedUser.email || '',
-                profileImageUrl: storedUser.profileImageUrl || ''
+                fullName: user.fullName || prev.fullName,
+                email: user.email || prev.email,
+                profileImageUrl: user.profileImageUrl || prev.profileImageUrl
             }));
         }
     }, [user]);
@@ -63,7 +65,7 @@ const Profile = ({ user, setUser }) => {
         }
 
         setLoading(true);
-        const currentUserId = user?.id || localStorage.getItem('id');
+        const currentUserId = user?.id || localStorage.getItem('id') || localStorage.getItem('userId');
         
         try {
             const response = await api.put(`/User/update-profile/${currentUserId}`, formData);
@@ -71,6 +73,7 @@ const Profile = ({ user, setUser }) => {
                 alert("Profile updated successfully!");
                 const updatedUser = {
                     ...user,
+                    id: currentUserId,
                     fullName: formData.fullName,
                     email: formData.email,
                     profileImageUrl: formData.profileImageUrl
@@ -79,19 +82,10 @@ const Profile = ({ user, setUser }) => {
                 setIsEditMode(false);
             }
         } catch (error) {
-            alert(error.response?.data?.message || "Update failed.");
+            alert(error.response?.data?.message || "Update failed. Check your current password.");
         } finally {
             setLoading(false);
         }
-    };
-
-    const btnStyle = {
-        backgroundColor: '#ff6600',
-        color: 'white',
-        border: 'none',
-        fontWeight: 'bold',
-        transition: '0.3s',
-        borderRadius: '8px'
     };
 
     return (
@@ -104,9 +98,15 @@ const Profile = ({ user, setUser }) => {
                             {!isEditMode && (
                                 <button 
                                     className="btn btn-sm" 
-                                    style={{ border: '2px solid #ff6600', color: '#ff6600', fontWeight: 'bold' }}
+                                    style={{ 
+                                        backgroundColor: '#1a1a1a', 
+                                        color: '#ff6600', 
+                                        border: '2px solid #ff6600',
+                                        fontWeight: 'bold',
+                                        transition: '0.3s'
+                                    }}
                                     onMouseOver={(e) => { e.target.style.backgroundColor = '#ff6600'; e.target.style.color = 'white'; }}
-                                    onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#ff6600'; }}
+                                    onMouseOut={(e) => { e.target.style.backgroundColor = '#1a1a1a'; e.target.style.color = '#ff6600'; }}
                                     onClick={() => setIsEditMode(true)}
                                 >
                                     Edit Profile
@@ -131,7 +131,7 @@ const Profile = ({ user, setUser }) => {
                                         </label>
                                     )}
                                 </div>
-                                <h5 className="mt-2 fw-bold">{formData.fullName || "User Name"}</h5>
+                                <h5 className="mt-2 fw-bold">{formData.fullName || "Loading..."}</h5>
                             </div>
 
                             <form onSubmit={handleSubmit}>
@@ -153,18 +153,18 @@ const Profile = ({ user, setUser }) => {
                                                 <h6 className="fw-bold mb-3" style={{ color: '#ff6600' }}>Security Settings</h6>
                                                 <div className="mb-3">
                                                     <label className="small fw-bold">Current Password</label>
-                                                    <input type="password" name="currentPassword" 
+                                                    <input type="password" name="currentPassword" placeholder="كلمة السر الحالية"
                                                         className="form-control" value={formData.currentPassword} onChange={handleChange} required />
                                                 </div>
                                                 <div className="row">
                                                     <div className="col-md-6 mb-3">
                                                         <label className="small fw-bold">New Password</label>
-                                                        <input type="password" name="newPassword" 
+                                                        <input type="password" name="newPassword" placeholder="الجديدة"
                                                             className="form-control" value={formData.newPassword} onChange={handleChange} />
                                                     </div>
                                                     <div className="col-md-6 mb-3">
                                                         <label className="small fw-bold">Confirm New Password</label>
-                                                        <input type="password" name="confirmNewPassword" 
+                                                        <input type="password" name="confirmNewPassword" placeholder="تأكيد الجديدة"
                                                             className="form-control" value={formData.confirmNewPassword} onChange={handleChange} />
                                                     </div>
                                                 </div>
@@ -173,10 +173,16 @@ const Profile = ({ user, setUser }) => {
                                                 <button 
                                                     type="submit" 
                                                     disabled={loading} 
-                                                    className="btn flex-grow-1 py-2 shadow-sm" 
-                                                    style={btnStyle}
-                                                    onMouseOver={(e) => e.target.style.backgroundColor = '#e65c00'}
-                                                    onMouseOut={(e) => e.target.style.backgroundColor = '#ff6600'}
+                                                    className="btn flex-grow-1 py-2 fw-bold" 
+                                                    style={{ 
+                                                        backgroundColor: '#1a1a1a', 
+                                                        color: '#ff6600', 
+                                                        border: '2px solid #ff6600',
+                                                        transition: '0.3s',
+                                                        borderRadius: '8px'
+                                                    }}
+                                                    onMouseOver={(e) => { e.target.style.backgroundColor = '#ff6600'; e.target.style.color = '#ffffff'; }}
+                                                    onMouseOut={(e) => { e.target.style.backgroundColor = '#1a1a1a'; e.target.style.color = '#ff6600'; }}
                                                 >
                                                     {loading ? 'Saving...' : 'Save Changes'}
                                                 </button>
