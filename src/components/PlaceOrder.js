@@ -13,7 +13,7 @@ const PlaceOrder = ({ userId }) => {
         const res = await api.get('/Product'); 
         setProducts(res.data);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error(error);
       } finally {
         setLoadingProducts(false);
       }
@@ -32,35 +32,48 @@ const PlaceOrder = ({ userId }) => {
 
   const updateItem = (index, field, value) => {
     const newItems = [...items];
-    newItems[index][field] = field === 'qty' ? (parseInt(value) || 0) : value;
+    if (field === 'qty') {
+      const val = parseInt(value);
+      newItems[index][field] = isNaN(val) ? 0 : val;
+    } else {
+      newItems[index][field] = value;
+    }
     setItems(newItems);
   };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     
-    const currentUserId = userId || localStorage.getItem('userId');
+    const rawUserId = userId || localStorage.getItem('userId');
+    const parsedUserId = parseInt(rawUserId);
 
-    if (!currentUserId) {
+    if (isNaN(parsedUserId)) {
       return alert("Please login again.");
     }
     
-    if (items.some(item => !item.productId)) {
-        return alert("Please select a product for all items.");
+    if (items.some(item => !item.productId || item.qty < 1)) {
+        return alert("Please select a product and valid quantity.");
     }
 
     try {
+      // تعديل المسميات لتطابق OrderRequest.cs و OrderItemRequest.cs
       const orderRequest = { 
-        userId: parseInt(currentUserId), 
-        items: items.map(item => ({
-            productId: parseInt(item.productId),
-            qty: item.qty
+        UserId: parsedUserId, 
+        Items: items.map(item => ({
+            ProductId: parseInt(item.productId),
+            Qty: item.qty
         }))
       };
+
       const res = await api.post('/Order/place', orderRequest);
-      setResponse(res.data);
-      alert("Order placed successfully!");
+      
+      if (res.data) {
+        // الرد سيحتوي على OrderId, Subtotal, Tax, Total حسب OrderResponse.cs
+        setResponse(res.data);
+        alert("Order placed successfully!");
+      }
     } catch (error) {
+      console.error("Order error:", error.response?.data);
       alert("Error placing order.");
     }
   };
@@ -154,21 +167,21 @@ const PlaceOrder = ({ userId }) => {
               <div className="mt-2">
                 <div className="d-flex justify-content-between mb-2">
                   <span style={{ color: '#f0f0f0' }} className="small">Reference:</span>
-                  <span className="fw-bold">#{response.orderId}</span>
+                  <span className="fw-bold">#{response.orderId || response.OrderId}</span>
                 </div>
                 <hr style={{ borderColor: '#444' }} />
                 <div className="d-flex justify-content-between mb-2">
                   <span style={{ color: '#f0f0f0' }}>Subtotal</span>
-                  <span className="fw-bold">{response.subtotal?.toFixed(2)} JOD</span>
+                  <span className="fw-bold">{(response.subtotal || response.Subtotal)?.toFixed(2)} JOD</span>
                 </div>
                 <div className="d-flex justify-content-between mb-3">
                   <span style={{ color: '#f0f0f0' }}>Tax (16%)</span>
-                  <span className="fw-bold">{response.tax?.toFixed(2)} JOD</span>
+                  <span className="fw-bold">{(response.tax || response.Tax)?.toFixed(2)} JOD</span>
                 </div>
                 <div className="p-3 rounded-3" style={{ backgroundColor: '#222', border: '1px solid #333' }}>
                   <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
                     <span className="h6 mb-0 fw-bold">Total Amount</span>
-                    <span className="h4 mb-0 fw-bold" style={{ color: '#ff6600' }}>{response.total?.toFixed(2)} JOD</span>
+                    <span className="h4 mb-0 fw-bold" style={{ color: '#ff6600' }}>{(response.total || response.Total)?.toFixed(2)} JOD</span>
                   </div>
                 </div>
               </div>
