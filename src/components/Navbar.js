@@ -99,7 +99,7 @@ const Navbar = ({ onLogout, onNavigate, user }) => {
                         style={profileThumbStyle} 
                     />
                     <span className="text-white small fw-bold d-none d-sm-inline">
-                        {user.fullName.split(' ')[0]}
+                        {user?.fullName ? user.fullName.split(' ')[0] : 'User'}
                     </span>
                 </div>
             )}
