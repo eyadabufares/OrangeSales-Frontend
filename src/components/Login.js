@@ -12,10 +12,11 @@ const Login = ({ onSwitch, onLoginSuccess }) => {
         email, password
       });
 
-      const userId = response.data.userId || response.data.id;
+      const userId = response.data.userId || response.data.id || response.data.user?.id;
 
       if (userId) {
         localStorage.setItem('userId', userId);
+        localStorage.setItem('id', userId);
         
         alert(response.data.message || "Login Successful");
         onLoginSuccess(userId); 

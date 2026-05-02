@@ -11,11 +11,13 @@ import Profile from '../components/Profile';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('isLoggedIn') === 'true';
+    return localStorage.getItem('isLoggedIn') === 'true' && localStorage.getItem('userId') !== null;
   });
+
   const [userId, setUserId] = useState(() => {
     return localStorage.getItem('userId') || null;
   });
+
   const [userData, setUserData] = useState(() => {
     const savedUser = localStorage.getItem('userData');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -26,12 +28,21 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState(null); 
 
   const handleLoginSuccess = (user) => {
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('userId', user.id);
-    localStorage.setItem('userData', JSON.stringify(user));
+    const extractedId = user?.id || user?.userId || user; 
+    
+    if (!extractedId) {
+        console.error("Login Error: No User ID found in response");
+        return;
+    }
 
-    setUserId(user.id);
-    setUserData(user); 
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userId', extractedId);
+    
+    const finalUserData = typeof user === 'object' ? user : { id: extractedId };
+    localStorage.setItem('userData', JSON.stringify(finalUserData));
+
+    setUserId(extractedId);
+    setUserData(finalUserData); 
     setIsLoggedIn(true);
     setCurrentPage('home');
   };
@@ -87,6 +98,10 @@ function App() {
                   setUser={(updatedUser) => {
                     setUserData(updatedUser);
                     localStorage.setItem('userData', JSON.stringify(updatedUser));
+                    if (updatedUser.id) {
+                        setUserId(updatedUser.id);
+                        localStorage.setItem('userId', updatedUser.id);
+                    }
                   }} 
                 />
               )}

@@ -6,30 +6,34 @@ const UserOrders = ({ userId, onViewReport }) => {
     const [loading, setLoading] = useState(true);
 
     const fetchOrders = async () => {
-        try {
-            const response = await api.get(`/Order/user/${userId}`);
-            setOrders(response.data);
+        const currentUserId = userId || localStorage.getItem('id') || localStorage.getItem('userId');
+        
+        if (!currentUserId || currentUserId === "undefined") {
             setLoading(false);
+            return;
+        }
+
+        try {
+            const response = await api.get(`/Order/user/${currentUserId}`);
+            setOrders(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error("Error fetching orders:", error);
+        } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (userId) {
-            fetchOrders();
-        }
+        fetchOrders();
     }, [userId]);
 
     const handleDelete = async (orderId) => {
         if (window.confirm("Are you sure you want to delete this order?")) {
             try {
                 await api.delete(`/Order/${orderId}`);
-                setOrders(orders.filter(order => order.orderId !== orderId));
+                setOrders(orders.filter(order => (order.orderId || order.OrderId) !== orderId));
                 alert("Order deleted successfully!");
             } catch (error) {
-                console.error("Error deleting order:", error);
                 alert("Failed to delete order.");
             }
         }
@@ -45,7 +49,9 @@ const UserOrders = ({ userId, onViewReport }) => {
             alignItems: 'center'
         };
         
-        switch (status?.toLowerCase()) {
+        const currentStatus = (status || "").toLowerCase();
+
+        switch (currentStatus) {
             case 'valid':
             case 'validated':
                 return <span className="badge bg-success text-white" style={badgeStyle} title="Verified by AI">
@@ -96,79 +102,93 @@ const UserOrders = ({ userId, onViewReport }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {orders.map((order) => (
-                                        <tr key={order.orderId}>
-                                            <td className="ps-4 fw-bold text-start">#{order.orderId}</td>
-                                            <td className="fw-bold">{order.total.toFixed(2)} JOD</td>
-                                            <td>{renderAiStatus(order.aiStatus, order.aiReason)}</td>
-                                            <td className="pe-4 text-center">
-                                                <button 
-                                                    className="btn btn-sm fw-bold px-3 me-2"
-                                                    style={{ 
-                                                        backgroundColor: '#1a1a1a', 
-                                                        color: '#ff6600', 
-                                                        border: '2px solid #ff6600', 
-                                                        borderRadius: '8px',
-                                                        transition: '0.3s'
-                                                    }}
-                                                    onMouseOver={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#ff6600';
-                                                        e.currentTarget.style.color = '#ffffff';
-                                                    }}
-                                                    onMouseOut={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#1a1a1a';
-                                                        e.currentTarget.style.color = '#ff6600';
-                                                    }}
-                                                    onClick={() => onViewReport(order.orderId)}
-                                                >
-                                                    <i className="fa fa-file-text-o me-1"></i> View Report
-                                                </button>
-                                                <button 
-                                                    className="btn btn-outline-danger btn-sm fw-bold px-3"
-                                                    style={{ borderRadius: '8px', borderWidth: '2px' }}
-                                                    onClick={() => handleDelete(order.orderId)}
-                                                >
-                                                    <i className="fa fa-trash me-1"></i> Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {orders.map((order) => {
+                                        const oId = order.orderId || order.OrderId;
+                                        const oTotal = order.total || order.Total || 0;
+                                        const oAiStatus = order.aiStatus || order.AiStatus;
+                                        const oAiReason = order.aiReason || order.AiReason;
+
+                                        return (
+                                            <tr key={oId}>
+                                                <td className="ps-4 fw-bold text-start">#{oId}</td>
+                                                <td className="fw-bold">{parseFloat(oTotal).toFixed(2)} JOD</td>
+                                                <td>{renderAiStatus(oAiStatus, oAiReason)}</td>
+                                                <td className="pe-4 text-center">
+                                                    <button 
+                                                        className="btn btn-sm fw-bold px-3 me-2"
+                                                        style={{ 
+                                                            backgroundColor: '#1a1a1a', 
+                                                            color: '#ff6600', 
+                                                            border: '2px solid #ff6600', 
+                                                            borderRadius: '8px',
+                                                            transition: '0.3s'
+                                                        }}
+                                                        onMouseOver={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#ff6600';
+                                                            e.currentTarget.style.color = '#ffffff';
+                                                        }}
+                                                        onMouseOut={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#1a1a1a';
+                                                            e.currentTarget.style.color = '#ff6600';
+                                                        }}
+                                                        onClick={() => onViewReport(oId)}
+                                                    >
+                                                        <i className="fa fa-file-text-o me-1"></i> View Report
+                                                    </button>
+                                                    <button 
+                                                        className="btn btn-outline-danger btn-sm fw-bold px-3"
+                                                        style={{ borderRadius: '8px', borderWidth: '2px' }}
+                                                        onClick={() => handleDelete(oId)}
+                                                    >
+                                                        <i className="fa fa-trash me-1"></i> Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <div className="d-md-none">
-                        {orders.map((order) => (
-                            <div key={order.orderId} className="card shadow-sm border-0 mb-3 p-3" style={{ borderRadius: '12px' }}>
-                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <span className="fw-bold text-dark">Order #{order.orderId}</span>
-                                    {renderAiStatus(order.aiStatus, order.aiReason)}
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center mt-3">
-                                    <div>
-                                        <span className="text-muted small d-block">Total Amount</span>
-                                        <span className="fw-bold h5 mb-0" style={{ color: '#ff6600' }}>{order.total.toFixed(2)} JOD</span>
+                        {orders.map((order) => {
+                             const oId = order.orderId || order.OrderId;
+                             const oTotal = order.total || order.Total || 0;
+                             const oAiStatus = order.aiStatus || order.AiStatus;
+                             const oAiReason = order.aiReason || order.AiReason;
+
+                             return (
+                                <div key={oId} className="card shadow-sm border-0 mb-3 p-3" style={{ borderRadius: '12px' }}>
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                        <span className="fw-bold text-dark">Order #{oId}</span>
+                                        {renderAiStatus(oAiStatus, oAiReason)}
                                     </div>
-                                    <div className="d-flex gap-2">
-                                        <button 
-                                            className="btn btn-dark btn-sm rounded-3 px-3"
-                                            style={{ backgroundColor: '#1a1a1a', color: '#ff6600', border: '1px solid #ff6600' }}
-                                            onClick={() => onViewReport(order.orderId)}
-                                        >
-                                            View Report
-                                        </button>
-                                        <button 
-                                            className="btn btn-danger btn-sm rounded-circle shadow-sm"
-                                            style={{ width: '35px', height: '35px' }}
-                                            onClick={() => handleDelete(order.orderId)}
-                                        >
-                                            <i className="fa fa-trash"></i>
-                                        </button>
+                                    <div className="d-flex justify-content-between align-items-center mt-3">
+                                        <div>
+                                            <span className="text-muted small d-block">Total Amount</span>
+                                            <span className="fw-bold h5 mb-0" style={{ color: '#ff6600' }}>{parseFloat(oTotal).toFixed(2)} JOD</span>
+                                        </div>
+                                        <div className="d-flex gap-2">
+                                            <button 
+                                                className="btn btn-dark btn-sm rounded-3 px-3"
+                                                style={{ backgroundColor: '#1a1a1a', color: '#ff6600', border: '1px solid #ff6600' }}
+                                                onClick={() => onViewReport(oId)}
+                                            >
+                                                View Report
+                                            </button>
+                                            <button 
+                                                className="btn btn-danger btn-sm rounded-circle shadow-sm"
+                                                style={{ width: '35px', height: '35px' }}
+                                                onClick={() => handleDelete(oId)}
+                                            >
+                                                <i className="fa fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                             );
+                        })}
                     </div>
                 </>
             )}

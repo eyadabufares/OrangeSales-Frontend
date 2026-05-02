@@ -15,12 +15,13 @@ const Profile = ({ user, setUser }) => {
     });
 
     useEffect(() => {
-        if (user) {
+        const storedUser = user || JSON.parse(localStorage.getItem('userData'));
+        if (storedUser) {
             setFormData(prev => ({
                 ...prev,
-                fullName: user.fullName || '',
-                email: user.email || '',
-                profileImageUrl: user.profileImageUrl || ''
+                fullName: storedUser.fullName || '',
+                email: storedUser.email || '',
+                profileImageUrl: storedUser.profileImageUrl || ''
             }));
         }
     }, [user]);
@@ -46,7 +47,7 @@ const Profile = ({ user, setUser }) => {
             });
             const fileData = await resp.json();
             setFormData({ ...formData, profileImageUrl: fileData.secure_url });
-            alert("Image uploaded! Don't forget to save changes below.");
+            alert("Image uploaded successfully!");
         } catch (err) {
             alert("Upload failed");
         } finally {
@@ -56,38 +57,41 @@ const Profile = ({ user, setUser }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (formData.newPassword !== formData.confirmNewPassword) {
+        if (formData.newPassword && formData.newPassword !== formData.confirmNewPassword) {
             alert("New passwords do not match!");
             return;
         }
 
         setLoading(true);
+        const currentUserId = user?.id || localStorage.getItem('id');
+        
         try {
-            const response = await api.put(`/User/update-profile/${user.id}`, formData);
-            if (response.data.success) {
+            const response = await api.put(`/User/update-profile/${currentUserId}`, formData);
+            if (response.data) {
                 alert("Profile updated successfully!");
                 const updatedUser = {
                     ...user,
-                    fullName: response.data.updatedFullName,
-                    email: response.data.updatedEmail,
-                    profileImageUrl: response.data.updatedProfileImageUrl
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    profileImageUrl: formData.profileImageUrl
                 };
                 setUser(updatedUser);
                 setIsEditMode(false);
             }
         } catch (error) {
-            alert(error.response?.data?.message || "Update failed. Check your current password.");
+            alert(error.response?.data?.message || "Update failed.");
         } finally {
             setLoading(false);
         }
     };
 
-    const orangeBtnStyle = {
+    const btnStyle = {
         backgroundColor: '#ff6600',
         color: 'white',
         border: 'none',
         fontWeight: 'bold',
-        transition: '0.3s'
+        transition: '0.3s',
+        borderRadius: '8px'
     };
 
     return (
@@ -100,7 +104,9 @@ const Profile = ({ user, setUser }) => {
                             {!isEditMode && (
                                 <button 
                                     className="btn btn-sm" 
-                                    style={{ border: '1px solid #ff6600', color: '#ff6600' }}
+                                    style={{ border: '2px solid #ff6600', color: '#ff6600', fontWeight: 'bold' }}
+                                    onMouseOver={(e) => { e.target.style.backgroundColor = '#ff6600'; e.target.style.color = 'white'; }}
+                                    onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#ff6600'; }}
                                     onClick={() => setIsEditMode(true)}
                                 >
                                     Edit Profile
@@ -125,7 +131,7 @@ const Profile = ({ user, setUser }) => {
                                         </label>
                                     )}
                                 </div>
-                                <h5 className="mt-2 fw-bold">{user?.fullName || "Loading..."}</h5>
+                                <h5 className="mt-2 fw-bold">{formData.fullName || "User Name"}</h5>
                             </div>
 
                             <form onSubmit={handleSubmit}>
@@ -144,28 +150,35 @@ const Profile = ({ user, setUser }) => {
                                     {isEditMode && (
                                         <>
                                             <div className="bg-light p-3 rounded-3 mt-4">
-                                                <h6 className="fw-bold mb-3" style={{ color: '#ff6600' }}>Change Password</h6>
+                                                <h6 className="fw-bold mb-3" style={{ color: '#ff6600' }}>Security Settings</h6>
                                                 <div className="mb-3">
                                                     <label className="small fw-bold">Current Password</label>
-                                                    <input type="password" name="currentPassword" placeholder="كلمة السر الحالية" 
+                                                    <input type="password" name="currentPassword" 
                                                         className="form-control" value={formData.currentPassword} onChange={handleChange} required />
                                                 </div>
                                                 <div className="row">
                                                     <div className="col-md-6 mb-3">
                                                         <label className="small fw-bold">New Password</label>
-                                                        <input type="password" name="newPassword" placeholder="الجديدة" 
+                                                        <input type="password" name="newPassword" 
                                                             className="form-control" value={formData.newPassword} onChange={handleChange} />
                                                     </div>
                                                     <div className="col-md-6 mb-3">
                                                         <label className="small fw-bold">Confirm New Password</label>
-                                                        <input type="password" name="confirmNewPassword" placeholder="تأكيد الجديدة" 
+                                                        <input type="password" name="confirmNewPassword" 
                                                             className="form-control" value={formData.confirmNewPassword} onChange={handleChange} />
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="col-12 mt-4 d-flex gap-2">
-                                                <button type="submit" disabled={loading} className="btn flex-grow-1 py-2" style={orangeBtnStyle}>
-                                                    {loading ? 'Processing...' : 'Save Changes'}
+                                                <button 
+                                                    type="submit" 
+                                                    disabled={loading} 
+                                                    className="btn flex-grow-1 py-2 shadow-sm" 
+                                                    style={btnStyle}
+                                                    onMouseOver={(e) => e.target.style.backgroundColor = '#e65c00'}
+                                                    onMouseOut={(e) => e.target.style.backgroundColor = '#ff6600'}
+                                                >
+                                                    {loading ? 'Saving...' : 'Save Changes'}
                                                 </button>
                                                 <button type="button" className="btn btn-secondary py-2" onClick={() => setIsEditMode(false)}>Cancel</button>
                                             </div>
