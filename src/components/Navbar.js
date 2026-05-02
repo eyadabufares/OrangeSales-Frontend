@@ -78,7 +78,6 @@ const Navbar = ({ onLogout, onNavigate, user }) => {
             <button style={linkStyle} className="btn" onClick={() => { onNavigate('orders'); setIsOpen(false); }}>Place Order</button>
             <button style={linkStyle} className="btn" onClick={() => { onNavigate('my-orders'); setIsOpen(false); }}>My Orders</button>
             <button style={linkStyle} className="btn" onClick={() => { onNavigate('reports'); setIsOpen(false); }}>Reports</button>
-            
             <button style={linkStyle} className="btn" onClick={() => { onNavigate('profile'); setIsOpen(false); }}>Profile</button>
 
             <button style={aiLinkStyle} className="btn" onClick={() => { onNavigate('ai-settings'); setIsOpen(false); }}>

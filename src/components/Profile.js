@@ -45,12 +45,10 @@ const Profile = ({ user, setUser }) => {
                 body: data
             });
             const fileData = await resp.json();
-            
             setFormData({ ...formData, profileImageUrl: fileData.secure_url });
-            alert("تم رفع الصورة بنجاح! لا تنسى حفظ التعديلات في الأسفل.");
+            alert("Image uploaded! Don't forget to save changes below.");
         } catch (err) {
-            console.error(err);
-            alert("فشل رفع الصورة");
+            alert("Upload failed");
         } finally {
             setLoading(false);
         }
@@ -58,32 +56,38 @@ const Profile = ({ user, setUser }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
         if (formData.newPassword !== formData.confirmNewPassword) {
-            alert("كلمات السر الجديدة غير متطابقة!");
+            alert("New passwords do not match!");
             return;
         }
 
         setLoading(true);
         try {
             const response = await api.put(`/User/update-profile/${user.id}`, formData);
-
             if (response.data.success) {
-                alert("تم تحديث البيانات بنجاح!");
-                
-                setUser({
+                alert("Profile updated successfully!");
+                const updatedUser = {
                     ...user,
                     fullName: response.data.updatedFullName,
                     email: response.data.updatedEmail,
                     profileImageUrl: response.data.updatedProfileImageUrl
-                });
-                setIsEditMode(false); 
+                };
+                setUser(updatedUser);
+                setIsEditMode(false);
             }
         } catch (error) {
-            alert(error.response?.data?.message || "فشل التحديث. تأكد من كلمة السر الحالية.");
+            alert(error.response?.data?.message || "Update failed. Check your current password.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const orangeBtnStyle = {
+        backgroundColor: '#ff6600',
+        color: 'white',
+        border: 'none',
+        fontWeight: 'bold',
+        transition: '0.3s'
     };
 
     return (
@@ -94,8 +98,12 @@ const Profile = ({ user, setUser }) => {
                         <div className="card-header bg-dark d-flex justify-content-between align-items-center py-3 px-4">
                             <h4 className="mb-0" style={{ color: '#ff6600' }}>My Profile</h4>
                             {!isEditMode && (
-                                <button className="btn btn-sm btn-outline-warning" onClick={() => setIsEditMode(true)}>
-                                    <i className="fa fa-edit"></i> Edit Profile
+                                <button 
+                                    className="btn btn-sm" 
+                                    style={{ border: '1px solid #ff6600', color: '#ff6600' }}
+                                    onClick={() => setIsEditMode(true)}
+                                >
+                                    Edit Profile
                                 </button>
                             )}
                         </div>
@@ -108,10 +116,10 @@ const Profile = ({ user, setUser }) => {
                                         alt="Profile" 
                                         className="rounded-circle border border-4"
                                         style={{ width: '130px', height: '130px', objectFit: 'cover', borderColor: '#ff6600' }}
-                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
                                     />
                                     {isEditMode && (
-                                        <label className="position-absolute bottom-0 end-0 bg-warning rounded-circle p-2 shadow" style={{ cursor: 'pointer', backgroundColor: '#ff6600', color: '#fff' }}>
+                                        <label className="position-absolute bottom-0 end-0 rounded-circle p-2 shadow" 
+                                               style={{ cursor: 'pointer', backgroundColor: '#ff6600', color: 'white' }}>
                                             <i className="fa fa-camera"></i>
                                             <input type="file" hidden onChange={handleImageUpload} accept="image/*" />
                                         </label>
@@ -134,36 +142,34 @@ const Profile = ({ user, setUser }) => {
                                     </div>
 
                                     {isEditMode && (
-                                        <div className="bg-light p-3 rounded-3 mt-4">
-                                            <h6 className="fw-bold mb-3" style={{ color: '#ff6600' }}>Change Password</h6>
-                                            <div className="mb-3">
-                                                <label className="small fw-bold">Current Password</label>
-                                                <input type="password" name="currentPassword" placeholder="كلمة السر الحالية" 
-                                                    className="form-control" value={formData.currentPassword} onChange={handleChange} required />
-                                            </div>
-                                            <div className="row">
-                                                <div className="col-md-6 mb-3">
-                                                    <label className="small fw-bold">New Password</label>
-                                                    <input type="password" name="newPassword" placeholder="الجديدة" 
-                                                        className="form-control" value={formData.newPassword} onChange={handleChange} />
+                                        <>
+                                            <div className="bg-light p-3 rounded-3 mt-4">
+                                                <h6 className="fw-bold mb-3" style={{ color: '#ff6600' }}>Change Password</h6>
+                                                <div className="mb-3">
+                                                    <label className="small fw-bold">Current Password</label>
+                                                    <input type="password" name="currentPassword" placeholder="كلمة السر الحالية" 
+                                                        className="form-control" value={formData.currentPassword} onChange={handleChange} required />
                                                 </div>
-                                                <div className="col-md-6 mb-3">
-                                                    <label className="small fw-bold">Confirm New Password</label>
-                                                    <input type="password" name="confirmNewPassword" placeholder="تأكيد الجديدة" 
-                                                        className="form-control" value={formData.confirmNewPassword} onChange={handleChange} />
+                                                <div className="row">
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="small fw-bold">New Password</label>
+                                                        <input type="password" name="newPassword" placeholder="الجديدة" 
+                                                            className="form-control" value={formData.newPassword} onChange={handleChange} />
+                                                    </div>
+                                                    <div className="col-md-6 mb-3">
+                                                        <label className="small fw-bold">Confirm New Password</label>
+                                                        <input type="password" name="confirmNewPassword" placeholder="تأكيد الجديدة" 
+                                                            className="form-control" value={formData.confirmNewPassword} onChange={handleChange} />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
-
-                                    {isEditMode && (
-                                        <div className="col-12 mt-4 d-flex gap-2">
-                                            <button type="submit" disabled={loading} className="btn flex-grow-1 fw-bold" 
-                                                style={{ backgroundColor: '#ff6600', color: '#fff' }}>
-                                                {loading ? 'Processing...' : 'Save Changes'}
-                                            </button>
-                                            <button type="button" className="btn btn-secondary" onClick={() => setIsEditMode(false)}>Cancel</button>
-                                        </div>
+                                            <div className="col-12 mt-4 d-flex gap-2">
+                                                <button type="submit" disabled={loading} className="btn flex-grow-1 py-2" style={orangeBtnStyle}>
+                                                    {loading ? 'Processing...' : 'Save Changes'}
+                                                </button>
+                                                <button type="button" className="btn btn-secondary py-2" onClick={() => setIsEditMode(false)}>Cancel</button>
+                                            </div>
+                                        </>
                                     )}
                                 </div>
                             </form>

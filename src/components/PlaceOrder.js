@@ -38,7 +38,12 @@ const PlaceOrder = ({ userId }) => {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
-    if (!userId) return alert("Please login again.");
+    
+    const currentUserId = userId || localStorage.getItem('userId');
+
+    if (!currentUserId) {
+      return alert("Please login again.");
+    }
     
     if (items.some(item => !item.productId)) {
         return alert("Please select a product for all items.");
@@ -46,7 +51,7 @@ const PlaceOrder = ({ userId }) => {
 
     try {
       const orderRequest = { 
-        userId: parseInt(userId), 
+        userId: parseInt(currentUserId), 
         items: items.map(item => ({
             productId: parseInt(item.productId),
             qty: item.qty
@@ -54,6 +59,7 @@ const PlaceOrder = ({ userId }) => {
       };
       const res = await api.post('/Order/place', orderRequest);
       setResponse(res.data);
+      alert("Order placed successfully!");
     } catch (error) {
       alert("Error placing order.");
     }
