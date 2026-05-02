@@ -86,32 +86,46 @@ const UserOrders = ({ userId, onViewReport }) => {
                 <>
                     <div className="d-none d-md-block card shadow-sm border-0 mb-5" style={{ borderRadius: '15px', overflow: 'hidden' }}>
                         <div className="table-responsive">
-                            <table className="table table-hover align-middle mb-0">
+                            <table className="table table-hover align-middle mb-0 text-center"> 
                                 <thead className="table-light">
                                     <tr>
-                                        <th className="ps-4 py-3 text-uppercase small fw-bold">Order ID</th>
+                                        <th className="ps-4 py-3 text-uppercase small fw-bold text-start">Order ID</th>
                                         <th className="py-3 text-uppercase small fw-bold">Total Price</th>
-                                        <th className="py-3 text-uppercase small fw-bold text-center">AI Validation</th>
-                                        <th className="pe-4 py-3 text-uppercase small fw-bold text-end">Actions</th>
+                                        <th className="py-3 text-uppercase small fw-bold">AI Validation</th>
+                                        <th className="pe-4 py-3 text-uppercase small fw-bold text-center" style={{ width: '250px' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {orders.map((order) => (
                                         <tr key={order.orderId}>
-                                            <td className="ps-4 fw-bold">#{order.orderId}</td>
+                                            <td className="ps-4 fw-bold text-start">#{order.orderId}</td>
                                             <td className="fw-bold">{order.total.toFixed(2)} JOD</td>
-                                            <td className="text-center">{renderAiStatus(order.aiStatus, order.aiReason)}</td>
-                                            <td className="pe-4 text-end">
+                                            <td>{renderAiStatus(order.aiStatus, order.aiReason)}</td>
+                                            <td className="pe-4 text-center">
                                                 <button 
-                                                    className="btn btn-outline-dark btn-sm fw-bold px-3 me-2"
-                                                    style={{ borderRadius: '6px' }}
+                                                    className="btn btn-sm fw-bold px-3 me-2"
+                                                    style={{ 
+                                                        backgroundColor: '#1a1a1a', 
+                                                        color: '#ff6600', 
+                                                        border: '2px solid #ff6600', 
+                                                        borderRadius: '8px',
+                                                        transition: '0.3s'
+                                                    }}
+                                                    onMouseOver={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#ff6600';
+                                                        e.currentTarget.style.color = '#ffffff';
+                                                    }}
+                                                    onMouseOut={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#1a1a1a';
+                                                        e.currentTarget.style.color = '#ff6600';
+                                                    }}
                                                     onClick={() => onViewReport(order.orderId)}
                                                 >
                                                     <i className="fa fa-file-text-o me-1"></i> View Report
                                                 </button>
                                                 <button 
                                                     className="btn btn-outline-danger btn-sm fw-bold px-3"
-                                                    style={{ borderRadius: '6px' }}
+                                                    style={{ borderRadius: '8px', borderWidth: '2px' }}
                                                     onClick={() => handleDelete(order.orderId)}
                                                 >
                                                     <i className="fa fa-trash me-1"></i> Delete
@@ -139,6 +153,7 @@ const UserOrders = ({ userId, onViewReport }) => {
                                     <div className="d-flex gap-2">
                                         <button 
                                             className="btn btn-dark btn-sm rounded-3 px-3"
+                                            style={{ backgroundColor: '#1a1a1a', color: '#ff6600', border: '1px solid #ff6600' }}
                                             onClick={() => onViewReport(order.orderId)}
                                         >
                                             View Report

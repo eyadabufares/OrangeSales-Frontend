@@ -1,24 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // أضفنا useEffect و useCallback
 import api from '../utils/api'; 
 
-
-const Reports = () => {
-  const [orderId, setOrderId] = useState('');
+const Reports = ({ initialOrderId }) => { 
+  const [orderId, setOrderId] = useState(initialOrderId || '');
   const [reportData, setReportData] = useState(null);
 
-  const fetchReport = async (e) => {
-    e.preventDefault();
-    if (orderId < 1) {
-      alert("Please enter a valid Order ID");
-      return;
-    }
+  const fetchReportData = useCallback(async (id) => {
+    const targetId = id || orderId;
+    if (!targetId || targetId < 1) return;
+
     try {
-      const res = await api.get(`/Report/sales-summary/${orderId}`); 
+      const res = await api.get(`/Report/sales-summary/${targetId}`); 
       setReportData(res.data);
     } catch (error) {
       console.error(error);
       alert("Report not found or Server Error");
     }
+  }, [orderId]);
+
+  useEffect(() => {
+    if (initialOrderId) {
+      setOrderId(initialOrderId);
+      fetchReportData(initialOrderId);
+    }
+  }, [initialOrderId, fetchReportData]);
+
+  const handleManualSubmit = (e) => {
+    e.preventDefault();
+    if (orderId < 1) {
+      alert("Please enter a valid Order ID");
+      return;
+    }
+    fetchReportData();
   };
 
   return (
@@ -30,7 +43,7 @@ const Reports = () => {
           </h2>
         </div>
 
-        <form onSubmit={fetchReport} className="row g-3 align-items-end">
+        <form onSubmit={handleManualSubmit} className="row g-3 align-items-end">
           <div className="col-12 col-md-8 col-lg-9">
             <label className="form-label fw-bold small text-muted">Order Reference ID</label>
             <input 
