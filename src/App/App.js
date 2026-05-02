@@ -7,16 +7,19 @@ import PlaceOrder from '../components/PlaceOrder';
 import Reports from '../components/Reports';
 import UserOrders from '../components/UserOrders'; 
 import AiSettings from '../components/AiSettings'; 
+import Profile from '../components/Profile'; 
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [userId, setUserId] = useState(null); 
+  const [userData, setUserData] = useState(null); 
   const [selectedOrderId, setSelectedOrderId] = useState(null); 
 
-  const handleLoginSuccess = (id) => {
-    setUserId(id);
+  const handleLoginSuccess = (user) => {
+    setUserId(user.id);
+    setUserData(user); 
     setIsLoggedIn(true);
     setCurrentPage('home');
   };
@@ -30,6 +33,7 @@ function App() {
     setIsLoggedIn(false);
     setShowRegister(false);
     setUserId(null); 
+    setUserData(null);
     setSelectedOrderId(null); 
     setCurrentPage('home'); 
   };
@@ -40,6 +44,7 @@ function App() {
         {isLoggedIn ? (
           <>
             <Navbar 
+              user={userData} 
               onLogout={handleLogout} 
               onNavigate={(page) => {
                 setCurrentPage(page);
@@ -62,6 +67,13 @@ function App() {
               )}
               
               {currentPage === 'ai-settings' && <AiSettings />}
+
+              {currentPage === 'profile' && (
+                <Profile 
+                  user={userData} 
+                  setUser={setUserData} 
+                />
+              )}
             </div>
           </>
         ) : (

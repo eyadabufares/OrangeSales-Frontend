@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Navbar = ({ onLogout, onNavigate }) => {
+const Navbar = ({ onLogout, onNavigate, user }) => { 
   const [isOpen, setIsOpen] = useState(false);
 
   const navStyle = {
@@ -46,6 +46,16 @@ const Navbar = ({ onLogout, onNavigate }) => {
     marginTop: '5px'
   };
 
+  const profileThumbStyle = {
+    width: '35px',
+    height: '35px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '2px solid #ff6600',
+    cursor: 'pointer',
+    marginRight: '10px'
+  };
+
   return (
     <nav className="navbar navbar-expand-lg mb-4 shadow sticky-top" style={navStyle}>
       <div className="container">
@@ -69,12 +79,31 @@ const Navbar = ({ onLogout, onNavigate }) => {
             <button style={linkStyle} className="btn" onClick={() => { onNavigate('my-orders'); setIsOpen(false); }}>My Orders</button>
             <button style={linkStyle} className="btn" onClick={() => { onNavigate('reports'); setIsOpen(false); }}>Reports</button>
             
+            <button style={linkStyle} className="btn" onClick={() => { onNavigate('profile'); setIsOpen(false); }}>Profile</button>
+
             <button style={aiLinkStyle} className="btn" onClick={() => { onNavigate('ai-settings'); setIsOpen(false); }}>
               <i className="fa fa-robot"></i> AI Settings
             </button>
           </div>
 
-          <div className="d-flex">
+          <div className="d-flex align-items-center">
+            {user && (
+                <div 
+                    className="d-flex align-items-center me-3" 
+                    onClick={() => onNavigate('profile')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <img 
+                        src={user.profileImageUrl || 'https://via.placeholder.com/150'} 
+                        alt="Profile" 
+                        style={profileThumbStyle} 
+                    />
+                    <span className="text-white small fw-bold d-none d-sm-inline">
+                        {user.fullName.split(' ')[0]}
+                    </span>
+                </div>
+            )}
+
             <button 
               style={logoutBtnStyle} 
               className="btn w-100-mobile"
