@@ -20,7 +20,11 @@ function App() {
 
   const [userData, setUserData] = useState(() => {
     const savedUser = localStorage.getItem('userData');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+        return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+        return null;
+    }
   });
 
   const [showRegister, setShowRegister] = useState(false);
@@ -28,17 +32,17 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState(null); 
 
   const handleLoginSuccess = (user) => {
-    const extractedId = user?.id || user?.userId || user; 
+    const extractedId = user?.id || user?.userId || (typeof user !== 'object' ? user : null); 
     
     if (!extractedId) {
-        console.error("Login Error: No User ID found in response");
+        console.error("Login Error: No User ID found");
         return;
     }
 
+    const finalUserData = typeof user === 'object' ? user : { id: extractedId, fullName: 'User' };
+
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('userId', extractedId);
-    
-    const finalUserData = typeof user === 'object' ? user : { id: extractedId };
     localStorage.setItem('userData', JSON.stringify(finalUserData));
 
     setUserId(extractedId);
@@ -76,7 +80,7 @@ function App() {
               }} 
             />
             
-            <div className="container">
+            <div className="container mt-4">
               {(currentPage === 'home' || currentPage === 'dashboard') && <Home onNavigate={setCurrentPage} />}
               
               {currentPage === 'orders' && <PlaceOrder userId={userId} />} 
@@ -96,11 +100,13 @@ function App() {
                 <Profile 
                   user={userData} 
                   setUser={(updatedUser) => {
-                    setUserData(updatedUser);
-                    localStorage.setItem('userData', JSON.stringify(updatedUser));
-                    if (updatedUser.id) {
-                        setUserId(updatedUser.id);
-                        localStorage.setItem('userId', updatedUser.id);
+                    const mergedUser = { ...userData, ...updatedUser };
+                    setUserData(mergedUser);
+                    localStorage.setItem('userData', JSON.stringify(mergedUser));
+                    if (mergedUser.id || mergedUser.userId) {
+                        const newId = mergedUser.id || mergedUser.userId;
+                        setUserId(newId);
+                        localStorage.setItem('userId', newId);
                     }
                   }} 
                 />
@@ -128,7 +134,7 @@ function App() {
           color: '#ffffff',
           textAlign: 'center',
           padding: '20px 0',
-          marginTop: '50px',
+          marginTop: 'auto',
           borderTop: '4px solid #ff6600'
       }}>
           <div className="container">

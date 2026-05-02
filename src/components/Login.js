@@ -12,16 +12,20 @@ const Login = ({ onSwitch, onLoginSuccess }) => {
         email, password
       });
 
-      const userId = response.data.userId || response.data.id || response.data.user?.id;
+      if (response.data) {
+        const userData = response.data;
+        const userId = userData.userId || userData.id || userData.user?.id;
 
-      if (userId) {
-        localStorage.setItem('userId', userId);
-        localStorage.setItem('id', userId);
-        
-        alert(response.data.message || "Login Successful");
-        onLoginSuccess(userId); 
-      } else {
-        alert("Error: User ID not received from server.");
+        if (userId) {
+          localStorage.setItem('userId', userId);
+          localStorage.setItem('id', userId);
+          
+          alert(userData.message || "Login Successful");
+          
+          onLoginSuccess(userData); 
+        } else {
+          alert("Error: User ID not received from server.");
+        }
       }
     } catch (error) {
       alert(error.response?.data?.message || "Invalid Credentials");

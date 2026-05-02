@@ -56,6 +56,9 @@ const Navbar = ({ onLogout, onNavigate, user }) => {
     marginRight: '10px'
   };
 
+  const fullName = user?.fullName || user?.FullName || 'User';
+  const profileImg = user?.profileImageUrl || user?.ProfileImageUrl || 'https://via.placeholder.com/150';
+
   return (
     <nav className="navbar navbar-expand-lg mb-4 shadow sticky-top" style={navStyle}>
       <div className="container">
@@ -93,12 +96,12 @@ const Navbar = ({ onLogout, onNavigate, user }) => {
                     style={{ cursor: 'pointer' }}
                 >
                     <img 
-                        src={user.profileImageUrl || 'https://via.placeholder.com/150'} 
+                        src={profileImg} 
                         alt="Profile" 
                         style={profileThumbStyle} 
                     />
                     <span className="text-white small fw-bold d-none d-sm-inline">
-                        {user?.fullName ? user.fullName.split(' ')[0] : 'User'}
+                        {fullName.split(' ')[0]}
                     </span>
                 </div>
             )}
