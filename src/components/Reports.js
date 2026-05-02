@@ -13,9 +13,10 @@ const Reports = () => {
       return;
     }
     try {
-      const res = await api.post('/Report/sales-summary', { orderId: parseInt(orderId) });
+      const res = await api.get(`/Report/sales-summary/${orderId}`); 
       setReportData(res.data);
     } catch (error) {
+      console.error(error);
       alert("Report not found or Server Error");
     }
   };
