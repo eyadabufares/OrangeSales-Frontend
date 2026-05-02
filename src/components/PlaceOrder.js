@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api'; 
 
-
 const PlaceOrder = ({ userId }) => {
-  const [items, setItems] = useState([{ productId: 1, qty: 1 }]);
+  const [products, setProducts] = useState([]); 
+  const [items, setItems] = useState([{ productId: '', qty: 1 }]);
   const [response, setResponse] = useState(null);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const addItem = () => setItems([...items, { productId: 1, qty: 1 }]);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await api.get('/Product'); 
+        setProducts(res.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const addItem = () => setItems([...items, { productId: '', qty: 1 }]);
 
   const removeItem = (index) => {
     if (items.length > 1) {
@@ -17,17 +32,26 @@ const PlaceOrder = ({ userId }) => {
 
   const updateItem = (index, field, value) => {
     const newItems = [...items];
-    let numValue = parseInt(value) || 0;
-    if (field === 'productId' && numValue < 0) numValue = 0;
-    newItems[index][field] = numValue;
+    newItems[index][field] = field === 'qty' ? (parseInt(value) || 0) : value;
     setItems(newItems);
   };
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!userId) return alert("Please login again.");
+    
+    if (items.some(item => !item.productId)) {
+        return alert("Please select a product for all items.");
+    }
+
     try {
-      const orderRequest = { userId, items };
+      const orderRequest = { 
+        userId: parseInt(userId), 
+        items: items.map(item => ({
+            productId: parseInt(item.productId),
+            qty: item.qty
+        }))
+      };
       const res = await api.post('/Order/place', orderRequest);
       setResponse(res.data);
     } catch (error) {
@@ -50,15 +74,20 @@ const PlaceOrder = ({ userId }) => {
               {items.map((item, index) => (
                 <div key={index} className="row g-2 g-md-3 mb-3 align-items-end p-2 p-md-3 rounded-3 mx-0" style={{ backgroundColor: '#f8f9fa' }}>
                   <div className="col-6 col-md-5">
-                    <label className="form-label small fw-bold text-dark">Product ID</label>
-                    <input
-                      type="number"
-                      className="form-control border-0 shadow-sm"
+                    <label className="form-label small fw-bold text-dark">Product Name</label>
+                    <select
+                      className="form-select border-0 shadow-sm"
                       value={item.productId}
-                      min="1"
                       onChange={(e) => updateItem(index, 'productId', e.target.value)}
                       required
-                    />
+                    >
+                      <option value="">{loadingProducts ? "Loading..." : "-- Select Product --"}</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (${p.price})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="col-6 col-md-3">
                     <label className="form-label small fw-bold text-dark">Quantity</label>
@@ -87,6 +116,7 @@ const PlaceOrder = ({ userId }) => {
               <div className="d-flex justify-content-center mt-4">
                 <button
                   className="btn shadow-sm w-100 w-md-auto px-md-5 py-2"
+                  type="submit"
                   style={{
                     borderRadius: '8px',
                     backgroundColor: '#1a1a1a',

@@ -13,6 +13,7 @@ function App() {
   const [showRegister, setShowRegister] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
   const [userId, setUserId] = useState(null); 
+  const [selectedOrderId, setSelectedOrderId] = useState(null); 
 
   const handleLoginSuccess = (id) => {
     setUserId(id);
@@ -20,10 +21,16 @@ function App() {
     setCurrentPage('home');
   };
 
+  const navigateToReport = (orderId) => {
+    setSelectedOrderId(orderId);
+    setCurrentPage('reports');
+  };
+
   const handleLogout = () => {
     setIsLoggedIn(false);
     setShowRegister(false);
     setUserId(null); 
+    setSelectedOrderId(null); 
     setCurrentPage('home'); 
   };
 
@@ -32,12 +39,27 @@ function App() {
       <div className="flex-grow-1">
         {isLoggedIn ? (
           <>
-            <Navbar onLogout={handleLogout} onNavigate={setCurrentPage} />
+            <Navbar 
+              onLogout={handleLogout} 
+              onNavigate={(page) => {
+                setCurrentPage(page);
+                if (page !== 'reports') setSelectedOrderId(null);
+              }} 
+            />
+            
             <div className="container">
               {(currentPage === 'home' || currentPage === 'dashboard') && <Home onNavigate={setCurrentPage} />}
+              
               {currentPage === 'orders' && <PlaceOrder userId={userId} />} 
-              {currentPage === 'reports' && <Reports />}
-              {currentPage === 'my-orders' && <UserOrders userId={userId} />}
+              
+              {currentPage === 'reports' && <Reports initialOrderId={selectedOrderId} />}
+              
+              {currentPage === 'my-orders' && (
+                <UserOrders 
+                  userId={userId} 
+                  onViewReport={navigateToReport} 
+                />
+              )}
               
               {currentPage === 'ai-settings' && <AiSettings />}
             </div>

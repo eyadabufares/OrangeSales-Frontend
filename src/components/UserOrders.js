@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api'; 
 
-
-const UserOrders = ({ userId }) => {
+const UserOrders = ({ userId, onViewReport }) => { 
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -48,10 +47,12 @@ const UserOrders = ({ userId }) => {
         
         switch (status?.toLowerCase()) {
             case 'valid':
+            case 'validated':
                 return <span className="badge bg-success text-white" style={badgeStyle} title="Verified by AI">
                           <i className="fa fa-check-circle me-1"></i> Valid
                        </span>;
             case 'not valid':
+            case 'rejected':
                 return <span className="badge bg-danger text-white" style={badgeStyle} title={reason}>
                           <i className="fa fa-times-circle me-1"></i> Rejected
                        </span>;
@@ -102,6 +103,13 @@ const UserOrders = ({ userId }) => {
                                             <td className="text-center">{renderAiStatus(order.aiStatus, order.aiReason)}</td>
                                             <td className="pe-4 text-end">
                                                 <button 
+                                                    className="btn btn-outline-dark btn-sm fw-bold px-3 me-2"
+                                                    style={{ borderRadius: '6px' }}
+                                                    onClick={() => onViewReport(order.orderId)}
+                                                >
+                                                    <i className="fa fa-file-text-o me-1"></i> View Report
+                                                </button>
+                                                <button 
                                                     className="btn btn-outline-danger btn-sm fw-bold px-3"
                                                     style={{ borderRadius: '6px' }}
                                                     onClick={() => handleDelete(order.orderId)}
@@ -123,18 +131,26 @@ const UserOrders = ({ userId }) => {
                                     <span className="fw-bold text-dark">Order #{order.orderId}</span>
                                     {renderAiStatus(order.aiStatus, order.aiReason)}
                                 </div>
-                                <div className="d-flex justify-content-between align-items-center">
+                                <div className="d-flex justify-content-between align-items-center mt-3">
                                     <div>
                                         <span className="text-muted small d-block">Total Amount</span>
                                         <span className="fw-bold h5 mb-0" style={{ color: '#ff6600' }}>{order.total.toFixed(2)} JOD</span>
                                     </div>
-                                    <button 
-                                        className="btn btn-danger btn-sm rounded-circle shadow-sm"
-                                        style={{ width: '35px', height: '35px' }}
-                                        onClick={() => handleDelete(order.orderId)}
-                                    >
-                                        <i className="fa fa-trash"></i>
-                                    </button>
+                                    <div className="d-flex gap-2">
+                                        <button 
+                                            className="btn btn-dark btn-sm rounded-3 px-3"
+                                            onClick={() => onViewReport(order.orderId)}
+                                        >
+                                            View Report
+                                        </button>
+                                        <button 
+                                            className="btn btn-danger btn-sm rounded-circle shadow-sm"
+                                            style={{ width: '35px', height: '35px' }}
+                                            onClick={() => handleDelete(order.orderId)}
+                                        >
+                                            <i className="fa fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}

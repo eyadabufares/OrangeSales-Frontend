@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import api from '../utils/api'; 
 
-
 const Login = ({ onSwitch, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,11 +11,16 @@ const Login = ({ onSwitch, onLoginSuccess }) => {
       const response = await api.post('/Auth/login', {
         email, password
       });
-      alert(response.data.message);
-      if (response.data.userId) {
-        onLoginSuccess(response.data.userId); 
+
+      const userId = response.data.userId || response.data.id;
+
+      if (userId) {
+        localStorage.setItem('userId', userId);
+        
+        alert(response.data.message || "Login Successful");
+        onLoginSuccess(userId); 
       } else {
-        onLoginSuccess(1); 
+        alert("Error: User ID not received from server.");
       }
     } catch (error) {
       alert(error.response?.data?.message || "Invalid Credentials");
