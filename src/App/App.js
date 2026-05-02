@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Login from '../components/Login';
 import Register from '../components/Register';
 import Home from '../components/Home';
@@ -10,32 +10,45 @@ import AiSettings from '../components/AiSettings';
 import Profile from '../components/Profile'; 
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  });
+  const [userId, setUserId] = useState(() => {
+    return localStorage.getItem('userId') || null;
+  });
+  const [userData, setUserData] = useState(() => {
+    const savedUser = localStorage.getItem('userData');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
   const [showRegister, setShowRegister] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
-  const [userId, setUserId] = useState(null); 
-  const [userData, setUserData] = useState(null); 
   const [selectedOrderId, setSelectedOrderId] = useState(null); 
 
   const handleLoginSuccess = (user) => {
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('userId', user.id);
+    localStorage.setItem('userData', JSON.stringify(user));
+
     setUserId(user.id);
     setUserData(user); 
     setIsLoggedIn(true);
     setCurrentPage('home');
   };
 
-  const navigateToReport = (orderId) => {
-    setSelectedOrderId(orderId);
-    setCurrentPage('reports');
-  };
-
   const handleLogout = () => {
+    localStorage.clear(); 
     setIsLoggedIn(false);
     setShowRegister(false);
     setUserId(null); 
     setUserData(null);
     setSelectedOrderId(null); 
     setCurrentPage('home'); 
+  };
+
+  const navigateToReport = (orderId) => {
+    setSelectedOrderId(orderId);
+    setCurrentPage('reports');
   };
 
   return (
@@ -71,7 +84,10 @@ function App() {
               {currentPage === 'profile' && (
                 <Profile 
                   user={userData} 
-                  setUser={setUserData} 
+                  setUser={(updatedUser) => {
+                    setUserData(updatedUser);
+                    localStorage.setItem('userData', JSON.stringify(updatedUser));
+                  }} 
                 />
               )}
             </div>

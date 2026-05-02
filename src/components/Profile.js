@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 
 const Profile = ({ user, setUser }) => {
@@ -13,6 +13,17 @@ const Profile = ({ user, setUser }) => {
         newPassword: '',
         confirmNewPassword: ''
     });
+
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                fullName: user.fullName || '',
+                email: user.email || '',
+                profileImageUrl: user.profileImageUrl || ''
+            }));
+        }
+    }, [user]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -59,6 +70,7 @@ const Profile = ({ user, setUser }) => {
 
             if (response.data.success) {
                 alert("تم تحديث البيانات بنجاح!");
+                
                 setUser({
                     ...user,
                     fullName: response.data.updatedFullName,
@@ -68,7 +80,7 @@ const Profile = ({ user, setUser }) => {
                 setIsEditMode(false); 
             }
         } catch (error) {
-            alert(error.response?.data?.message || "فشل التحديث");
+            alert(error.response?.data?.message || "فشل التحديث. تأكد من كلمة السر الحالية.");
         } finally {
             setLoading(false);
         }
@@ -96,6 +108,7 @@ const Profile = ({ user, setUser }) => {
                                         alt="Profile" 
                                         className="rounded-circle border border-4"
                                         style={{ width: '130px', height: '130px', objectFit: 'cover', borderColor: '#ff6600' }}
+                                        onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
                                     />
                                     {isEditMode && (
                                         <label className="position-absolute bottom-0 end-0 bg-warning rounded-circle p-2 shadow" style={{ cursor: 'pointer', backgroundColor: '#ff6600', color: '#fff' }}>
@@ -104,8 +117,7 @@ const Profile = ({ user, setUser }) => {
                                         </label>
                                     )}
                                 </div>
-                                <h5 className="mt-2 fw-bold">{user?.fullName}</h5>
-                                {isEditMode && <p className="small text-muted">اضغط على أيقونة الكاميرا لرفع صورة من جهازك</p>}
+                                <h5 className="mt-2 fw-bold">{user?.fullName || "Loading..."}</h5>
                             </div>
 
                             <form onSubmit={handleSubmit}>
@@ -120,13 +132,6 @@ const Profile = ({ user, setUser }) => {
                                         <input type="email" name="email" className="form-control bg-light" 
                                             value={formData.email} onChange={handleChange} disabled={!isEditMode} required />
                                     </div>
-                                    <div className="col-12">
-                                        <label className="form-label small fw-bold">Profile Image URL</label>
-                                        <input type="text" name="profileImageUrl" 
-                                            placeholder="أو ضع رابط الصورة هنا مباشرة" 
-                                            className="form-control bg-light" 
-                                            value={formData.profileImageUrl} onChange={handleChange} disabled={!isEditMode} />
-                                    </div>
 
                                     {isEditMode && (
                                         <div className="bg-light p-3 rounded-3 mt-4">
@@ -139,7 +144,7 @@ const Profile = ({ user, setUser }) => {
                                             <div className="row">
                                                 <div className="col-md-6 mb-3">
                                                     <label className="small fw-bold">New Password</label>
-                                                    <input type="password" name="newPassword" placeholder="كلمة السر الجديدة" 
+                                                    <input type="password" name="newPassword" placeholder="الجديدة" 
                                                         className="form-control" value={formData.newPassword} onChange={handleChange} />
                                                 </div>
                                                 <div className="col-md-6 mb-3">
